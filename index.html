@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Modern Ludo - Offline</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <!-- Start Menu Overlay -->
+        <div id="start-menu" class="overlay">
+            <div class="menu-content">
+                <h1>LUDO MASTER</h1>
+                <div class="mode-selection">
+                    <button id="btn-2-player" class="menu-btn">2 Player Mode</button>
+                    <button id="btn-4-player" class="menu-btn">4 Player Mode</button>
+                </div>
+                <p class="hint">Classic Board Game - Offline Mode</p>
+            </div>
+        </div>
+
+        <!-- Victory Overlay -->
+        <div id="victory-overlay" class="overlay hidden">
+            <div class="menu-content">
+                <h2 id="winner-text">BLUE WINS!</h2>
+                <div class="celebration-icon">🏆</div>
+                <button id="btn-restart" class="menu-btn">Play Again</button>
+            </div>
+        </div>
+
+        <!-- Game UI -->
+        <header id="game-header">
+            <div class="turn-indicator" id="turn-indicator">
+                <span class="dot"></span>
+                <span class="text">Player's Turn</span>
+            </div>
+            <button id="btn-menu-back" class="icon-btn">⚙️</button>
+        </header>
+
+        <main id="board-wrapper">
+            <div id="ludo-board">
+                <!-- Grid will be generated or hardcoded for better control -->
+                <!-- 15x15 Grid cells -->
+                <!-- Bases (6x6) -->
+                <div class="base red" id="base-red">
+                    <div class="base-inner">
+                        <div class="token-slot" data-color="red" data-index="0"></div>
+                        <div class="token-slot" data-color="red" data-index="1"></div>
+                        <div class="token-slot" data-color="red" data-index="2"></div>
+                        <div class="token-slot" data-color="red" data-index="3"></div>
+                    </div>
+                </div>
+                <div class="path-area top-center"></div>
+                <div class="base green" id="base-green">
+                    <div class="base-inner">
+                        <div class="token-slot" data-color="green" data-index="0"></div>
+                        <div class="token-slot" data-color="green" data-index="1"></div>
+                        <div class="token-slot" data-color="green" data-index="2"></div>
+                        <div class="token-slot" data-color="green" data-index="3"></div>
+                    </div>
+                </div>
+
+                <div class="path-area middle-left"></div>
+                <div class="home-center" id="home-center">
+                    <div class="home-triangle red"></div>
+                    <div class="home-triangle green"></div>
+                    <div class="home-triangle yellow"></div>
+                    <div class="home-triangle blue"></div>
+                </div>
+                <div class="path-area middle-right"></div>
+
+                <div class="base blue" id="base-blue">
+                    <div class="base-inner">
+                        <div class="token-slot" data-color="blue" data-index="0"></div>
+                        <div class="token-slot" data-color="blue" data-index="1"></div>
+                        <div class="token-slot" data-color="blue" data-index="2"></div>
+                        <div class="token-slot" data-color="blue" data-index="3"></div>
+                    </div>
+                </div>
+                <div class="path-area bottom-center"></div>
+                <div class="base yellow" id="base-yellow">
+                    <div class="base-inner">
+                        <div class="token-slot" data-color="yellow" data-index="0"></div>
+                        <div class="token-slot" data-color="yellow" data-index="1"></div>
+                        <div class="token-slot" data-color="yellow" data-index="2"></div>
+                        <div class="token-slot" data-color="yellow" data-index="3"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tokens Container -->
+            <div id="tokens-container">
+                <!-- Tokens will be created dynamically via JS -->
+            </div>
+        </main>
+
+        <footer id="game-footer">
+            <div id="dice-container">
+                <div id="dice-wrapper">
+                    <div id="dice" class="dice-red">
+                        <div class="face front"></div>
+                        <div class="face back"></div>
+                        <div class="face top"></div>
+                        <div class="face bottom"></div>
+                        <div class="face left"></div>
+                        <div class="face right"></div>
+                    </div>
+                    <div id="dice-result-badge" class="hidden">0</div>
+                </div>
+                <button id="btn-roll" class="roll-btn">ROLL</button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Preload Audio Elements -->
+    <audio id="sfx-dice" src="sounds/dice.mp3"></audio>
+    <audio id="sfx-move" src="sounds/move.mp3"></audio>
+    <audio id="sfx-kill" src="sounds/kill.mp3"></audio>
+    <audio id="sfx-win" src="sounds/win.mp3"></audio>
+
+    <script src="script.js"></script>
+</body>
+</html>
