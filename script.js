@@ -13,8 +13,17 @@ const UI = {
     turnText: document.querySelector('.turn-indicator .text'),
     tokensContainer: document.getElementById('tokens-container'),
     container: document.getElementById('game-container'),
-    diceBadge: document.getElementById('dice-result-badge')
+    diceBadge: document.getElementById('dice-result-badge'),
+    
+    // In-Game Menu
+    ingameMenu: document.getElementById('ingame-menu'),
+    confirmPopup: document.getElementById('confirm-popup'),
+    confirmMsg: document.getElementById('confirm-msg'),
+    soundBtn: document.getElementById('btn-sound-toggle')
 };
+
+let soundMuted = false;
+let confirmAction = null;
 
 // --- Sound Engine ---
 const SoundEngine = {
@@ -25,7 +34,7 @@ const SoundEngine = {
         }
     },
     play(type) {
-        if (!this.ctx) return;
+        if (!this.ctx || soundMuted) return;
         if (this.ctx.state === 'suspended') this.ctx.resume();
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
@@ -71,6 +80,95 @@ const SoundEngine = {
         }
     }
 };
+
+// ... (Particle system and constants remain the same)
+
+// --- Menu Functions ---
+function toggleInGameMenu(show) {
+    if (show) UI.ingameMenu.classList.remove('hidden');
+    else UI.ingameMenu.classList.add('hidden');
+}
+
+function showConfirm(msg, action) {
+    UI.confirmMsg.innerText = msg;
+    confirmAction = action;
+    UI.confirmPopup.classList.remove('hidden');
+}
+
+function handleConfirm(yes) {
+    UI.confirmPopup.classList.add('hidden');
+    if (yes && confirmAction) confirmAction();
+    confirmAction = null;
+}
+
+function resetToMain() {
+    UI.ingameMenu.classList.add('hidden');
+    UI.startMenu.classList.remove('hidden');
+    UI.victoryOverlay.classList.add('hidden');
+    gameState.players = [];
+    UI.tokensContainer.innerHTML = '';
+    startMenuParticles();
+}
+
+function restartGame() {
+    UI.ingameMenu.classList.add('hidden');
+    initGame(gameState.players.length);
+}
+
+function toggleSound() {
+    soundMuted = !soundMuted;
+    UI.soundBtn.innerText = soundMuted ? '🔇' : '🔊';
+    document.getElementById('btn-sound-main').innerText = soundMuted ? '🔇' : '🔊';
+}
+
+function startMenuParticles() {
+    // Generate some constant floating particles for the start screen
+    const menu = document.querySelector('.premium-start');
+    const rect = menu.getBoundingClientRect();
+    for(let i=0; i<15; i++) {
+        setTimeout(() => {
+            if (!UI.startMenu.classList.contains('hidden')) {
+                Particles.create(rect.left + Math.random() * rect.width, rect.top + Math.random() * rect.height, 'rgba(255,255,255,0.2)', 5);
+            }
+        }, i * 500);
+    }
+}
+
+// --- Interaction Events ---
+document.getElementById('btn-play-now').addEventListener('click', () => initGame(2)); // Default to 2P for quick play
+document.getElementById('btn-settings').addEventListener('click', () => alert("Settings: High Quality Graphics Enabled"));
+document.getElementById('btn-about').addEventListener('click', () => alert("Bittumodx Ludo King v2.0\nPremium Offline Edition"));
+document.getElementById('btn-exit-main').addEventListener('click', () => {
+    if(confirm("Exit the game?")) window.close();
+});
+document.getElementById('btn-sound-main').addEventListener('click', toggleSound);
+
+document.getElementById('btn-main-menu').addEventListener('click', () => toggleInGameMenu(true));
+document.getElementById('btn-resume').addEventListener('click', () => toggleInGameMenu(false));
+UI.soundBtn.addEventListener('click', toggleSound);
+
+document.getElementById('btn-new-game').addEventListener('click', () => {
+    showConfirm("Start a new game session?", resetToMain);
+});
+
+document.getElementById('btn-restart-game').addEventListener('click', () => {
+    showConfirm("Restart the current match?", restartGame);
+});
+
+document.getElementById('btn-exit-game').addEventListener('click', () => {
+    showConfirm("Are you sure you want to exit?", resetToMain);
+});
+
+document.getElementById('btn-confirm-yes').addEventListener('click', () => handleConfirm(true));
+document.getElementById('btn-confirm-no').addEventListener('click', () => handleConfirm(false));
+
+// Initialize Start Screen
+startMenuParticles();
+setInterval(() => {
+    if (!UI.startMenu.classList.contains('hidden')) startMenuParticles();
+}, 8000);
+
+// ... (Rest of existing game logic functions like initGame, rollDice, etc.)
 
 // --- Particle System ---
 const Particles = {
@@ -130,19 +228,53 @@ let gameState = {
     extraTurn: false
 };
 
-// --- Core Logic ---
+// --- Initialization ---
 function initBoard() {
+    // Clear existing dynamic cells
     UI.board.querySelectorAll('.cell').forEach(c => c.remove());
+    
+    // Standard Ludo Starting Positions
+    const START_CELLS = {
+        red: [6, 1], green: [1, 8], yellow: [8, 13], blue: [13, 6]
+    };
+
     for(let r=0; r<15; r++) {
         for(let c=0; c<15; c++) {
+            // Skip areas handled by static HTML (Bases and center 3x3)
             if (isInsideBase(r, c) || (r >= 6 && r <= 8 && c >= 6 && c <= 8)) continue;
+            
             const cell = document.createElement('div');
             cell.classList.add('cell');
             cell.style.gridArea = `${r + 1} / ${c + 1}`;
-            if (SAFE_ZONES.some(sz => sz[0] === r && sz[1] === c)) cell.classList.add('safe');
+            
+            // 1. Color Player-Specific Home Paths
+            let isColored = false;
             for (let color of COLORS) {
-                if (HOME_PATHS[color].some(hp => hp[0] === r && hp[1] === c)) cell.classList.add(`${color}-path`);
+                if (HOME_PATHS[color].some(hp => hp[0] === r && hp[1] === c)) {
+                    cell.classList.add(`${color}-path`);
+                    isColored = true;
+                }
+                // 2. Color Player Starting Squares
+                const start = START_CELLS[color];
+                if (start[0] === r && start[1] === c) {
+                    cell.classList.add(`${color}-path`, 'start-cell');
+                    isColored = true;
+                }
             }
+            
+            // 3. Mark Safe Zones / Stars
+            if (SAFE_ZONES.some(sz => sz[0] === r && sz[1] === c)) {
+                cell.classList.add('safe');
+            }
+            
+            // 4. Tinting Quadrant Paths for better visibility (Optional but requested)
+            if (!isColored) {
+                if (r < 6 && c === 6) cell.style.backgroundColor = "rgba(46, 204, 113, 0.05)"; // Green arm tint
+                if (r > 8 && c === 8) cell.style.backgroundColor = "rgba(52, 152, 219, 0.05)"; // Blue arm tint
+                if (c < 6 && r === 8) cell.style.backgroundColor = "rgba(255, 77, 77, 0.05)";   // Red arm tint
+                if (c > 8 && r === 6) cell.style.backgroundColor = "rgba(241, 196, 15, 0.05)"; // Yellow arm tint
+            }
+            
             UI.board.appendChild(cell);
         }
     }
@@ -184,13 +316,23 @@ function initGame(playerCount) {
 
 function updateTurnUI() {
     const color = gameState.players[gameState.currentTurn];
-    UI.turnDot.className = 'dot'; // Reset classes
+    
+    // Update Turn Indicator
+    UI.turnDot.className = 'dot';
     UI.turnDot.style.backgroundColor = `var(--${color}-solid, ${color})`;
     UI.turnDot.style.boxShadow = `0 0 20px var(--${color}-solid, ${color})`;
     UI.turnText.innerText = `${color.toUpperCase()}'s Turn`;
-    UI.turnText.style.color = '#fff';
     UI.rollBtn.disabled = false;
-    UI.rollBtn.style.border = `2px solid var(--${color}-solid, ${color})`;
+    
+    // Dynamically Move Dice near Active Player
+    const diceContainer = document.getElementById('dice-container');
+    diceContainer.className = `pos-${color}`;
+    
+    // Highlight Active Base
+    document.querySelectorAll('.base').forEach(b => b.classList.remove('active'));
+    document.querySelector(`.base.${color}`).classList.add('active');
+    
+    // Board Tilt Effect
     document.getElementById('board-wrapper').style.transform = `rotateX(5deg) rotateY(${gameState.currentTurn * 2 - 3}deg)`;
 }
 
@@ -198,9 +340,10 @@ async function rollDice() {
     if (gameState.isRolling || gameState.waitingForMove) return;
     gameState.isRolling = true;
     UI.rollBtn.disabled = true;
+    UI.diceBadge.classList.add('hidden'); // Reset badge
     SoundEngine.play('dice');
 
-    // Enhanced 3D Physics Animation
+    // High-speed random rotation for roll feel
     const duration = 1000;
     const start = performance.now();
     
@@ -208,9 +351,9 @@ async function rollDice() {
         const elapsed = now - start;
         const progress = elapsed / duration;
         if (progress < 1) {
-            const rx = Math.random() * 720;
-            const ry = Math.random() * 720;
-            UI.dice.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg) scale(${1 + Math.sin(progress * Math.PI) * 0.3})`;
+            const rx = Math.random() * 1080;
+            const ry = Math.random() * 1080;
+            UI.dice.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg) scale(${1 + Math.sin(progress * Math.PI) * 0.2})`;
             requestAnimationFrame(anim);
         } else {
             finalizeDice();
@@ -221,30 +364,36 @@ async function rollDice() {
     function finalizeDice() {
         gameState.diceValue = Math.floor(Math.random() * 6) + 1;
         rotateDice(gameState.diceValue);
-        UI.diceBadge.innerText = gameState.diceValue;
-        UI.diceBadge.classList.remove('hidden');
-        gameState.isRolling = false;
+        
+        // Show result badge after dice settles
+        setTimeout(() => {
+            UI.diceBadge.innerText = gameState.diceValue;
+            UI.diceBadge.classList.remove('hidden');
+            
+            gameState.isRolling = false;
+            const color = gameState.players[gameState.currentTurn];
+            const validMoves = getValidMoves(color, gameState.diceValue);
 
-        const color = gameState.players[gameState.currentTurn];
-        const validMoves = getValidMoves(color, gameState.diceValue);
-
-        if (validMoves.length === 0) {
-            setTimeout(nextTurn, 1000);
-        } else {
-            gameState.waitingForMove = true;
-            validMoves.forEach(i => gameState.tokens[color][i].el.classList.add('active'));
-        }
+            if (validMoves.length === 0) {
+                setTimeout(nextTurn, 1000);
+            } else {
+                gameState.waitingForMove = true;
+                validMoves.forEach(i => gameState.tokens[color][i].el.classList.add('active'));
+            }
+        }, 800);
     }
 }
 
 function rotateDice(val) {
+    // Mapping container rotation to show correct top-facing face
+    // Front(1): rotateY(0), Back(6): rotateY(180), Top(2): rotateX(-90), Bottom(5): rotateX(90), Left(4): rotateY(90), Right(3): rotateY(-90)
     const mapping = {
         1: 'rotateX(0deg) rotateY(0deg)',
         6: 'rotateX(0deg) rotateY(180deg)',
         2: 'rotateX(-90deg) rotateY(0deg)',
         5: 'rotateX(90deg) rotateY(0deg)',
-        3: 'rotateX(0deg) rotateY(90deg)',
-        4: 'rotateX(0deg) rotateY(-90deg)'
+        4: 'rotateX(0deg) rotateY(90deg)',
+        3: 'rotateX(0deg) rotateY(-90deg)'
     };
     UI.dice.style.transform = mapping[val];
 }

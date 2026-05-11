@@ -1,23 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<link rel="manifest" href="manifest.json">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Modern Ludo - Offline</title>
+    <title>Bittumodx Ludo King - Premium Offline</title>
+    <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="game-container">
         <!-- Start Menu Overlay -->
         <div id="start-menu" class="overlay">
-            <div class="menu-content">
-                <h1>LUDO MASTER</h1>
-                <div class="mode-selection">
-                    <button id="btn-2-player" class="menu-btn">2 Player Mode</button>
-                    <button id="btn-4-player" class="menu-btn">4 Player Mode</button>
+            <div class="menu-content premium-start">
+                <div class="logo-wrapper">
+                    <h1 class="premium-logo-v2">Bittumodx<br><span class="king">Ludo King</span></h1>
                 </div>
-                <p class="hint">Classic Board Game - Offline Mode</p>
+                <div class="main-actions">
+                    <button id="btn-play-now" class="menu-btn primary-glow">Play Now</button>
+                    <div class="mode-grid">
+                        <button id="btn-2-player" class="menu-btn secondary-3d">2 Player</button>
+                        <button id="btn-4-player" class="menu-btn secondary-3d">4 Player</button>
+                    </div>
+                </div>
+                <div class="sub-actions">
+                    <div class="action-row">
+                        <button id="btn-settings" class="icon-menu-btn" title="Settings">⚙️</button>
+                        <button id="btn-sound-main" class="icon-menu-btn" title="Sound Toggle">🔊</button>
+                        <button id="btn-about" class="icon-menu-btn" title="About">ℹ️</button>
+                        <button id="btn-exit-main" class="icon-menu-btn danger" title="Exit">✖</button>
+                    </div>
+                </div>
+                <p class="app-version">v2.0 Premium Offline</p>
             </div>
         </div>
 
@@ -32,68 +45,79 @@
 
         <!-- Game UI -->
         <header id="game-header">
+            <button id="btn-main-menu" class="menu-icon-btn">☰</button>
             <div class="turn-indicator" id="turn-indicator">
                 <span class="dot"></span>
                 <span class="text">Player's Turn</span>
             </div>
-            <button id="btn-menu-back" class="icon-btn">⚙️</button>
+            <div class="header-controls">
+                <button id="btn-sound-toggle" class="icon-btn">🔊</button>
+            </div>
         </header>
+
+        <!-- In-Game Menu Overlay -->
+        <div id="ingame-menu" class="overlay hidden">
+            <div class="menu-content premium-menu">
+                <h2>PAUSED</h2>
+                <div class="menu-grid">
+                    <button id="btn-resume" class="menu-btn secondary">Resume</button>
+                    <button id="btn-restart-game" class="menu-btn secondary">Restart</button>
+                    <button id="btn-new-game" class="menu-btn secondary">New Game</button>
+                    <button id="btn-exit-game" class="menu-btn danger">Exit Game</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Confirmation Popup -->
+        <div id="confirm-popup" class="overlay hidden confirm-overlay">
+            <div class="menu-content popup-content">
+                <p id="confirm-msg">Are you sure you want to restart?</p>
+                <div class="popup-btns">
+                    <button id="btn-confirm-yes" class="menu-btn danger">Yes</button>
+                    <button id="btn-confirm-no" class="menu-btn secondary">No</button>
+                </div>
+            </div>
+        </div>
 
         <main id="board-wrapper">
             <div id="ludo-board">
-                <!-- Grid will be generated or hardcoded for better control -->
-                <!-- 15x15 Grid cells -->
-                <!-- Bases (6x6) -->
+                <!-- Bases -->
                 <div class="base red" id="base-red">
                     <div class="base-inner">
-                        <div class="token-slot" data-color="red" data-index="0"></div>
-                        <div class="token-slot" data-color="red" data-index="1"></div>
-                        <div class="token-slot" data-color="red" data-index="2"></div>
-                        <div class="token-slot" data-color="red" data-index="3"></div>
+                        <div class="token-slot"></div><div class="token-slot"></div>
+                        <div class="token-slot"></div><div class="token-slot"></div>
                     </div>
                 </div>
-                <div class="path-area top-center"></div>
                 <div class="base green" id="base-green">
                     <div class="base-inner">
-                        <div class="token-slot" data-color="green" data-index="0"></div>
-                        <div class="token-slot" data-color="green" data-index="1"></div>
-                        <div class="token-slot" data-color="green" data-index="2"></div>
-                        <div class="token-slot" data-color="green" data-index="3"></div>
+                        <div class="token-slot"></div><div class="token-slot"></div>
+                        <div class="token-slot"></div><div class="token-slot"></div>
+                    </div>
+                </div>
+                <div class="base blue" id="base-blue">
+                    <div class="base-inner">
+                        <div class="token-slot"></div><div class="token-slot"></div>
+                        <div class="token-slot"></div><div class="token-slot"></div>
+                    </div>
+                </div>
+                <div class="base yellow" id="base-yellow">
+                    <div class="base-inner">
+                        <div class="token-slot"></div><div class="token-slot"></div>
+                        <div class="token-slot"></div><div class="token-slot"></div>
                     </div>
                 </div>
 
-                <div class="path-area middle-left"></div>
+                <!-- Center Home -->
                 <div class="home-center" id="home-center">
                     <div class="home-triangle red"></div>
                     <div class="home-triangle green"></div>
                     <div class="home-triangle yellow"></div>
                     <div class="home-triangle blue"></div>
                 </div>
-                <div class="path-area middle-right"></div>
-
-                <div class="base blue" id="base-blue">
-                    <div class="base-inner">
-                        <div class="token-slot" data-color="blue" data-index="0"></div>
-                        <div class="token-slot" data-color="blue" data-index="1"></div>
-                        <div class="token-slot" data-color="blue" data-index="2"></div>
-                        <div class="token-slot" data-color="blue" data-index="3"></div>
-                    </div>
-                </div>
-                <div class="path-area bottom-center"></div>
-                <div class="base yellow" id="base-yellow">
-                    <div class="base-inner">
-                        <div class="token-slot" data-color="yellow" data-index="0"></div>
-                        <div class="token-slot" data-color="yellow" data-index="1"></div>
-                        <div class="token-slot" data-color="yellow" data-index="2"></div>
-                        <div class="token-slot" data-color="yellow" data-index="3"></div>
-                    </div>
-                </div>
             </div>
 
             <!-- Tokens Container -->
-            <div id="tokens-container">
-                <!-- Tokens will be created dynamically via JS -->
-            </div>
+            <div id="tokens-container"></div>
         </main>
 
         <footer id="game-footer">
